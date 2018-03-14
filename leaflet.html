@@ -45,8 +45,7 @@
         json=JSON.parse(data);
         var items = [];
         $.each(json["features"], function( index, element ) {
-          console.log(element["properties"]["URL"]);  
-          items.push('<li>' + element["properties"]["URL"] + '</li>');
+          items.push('<li class="feature" feature-index="' + index + '">' + element["properties"]["URL"] + '</li>');
         });
         $('#features-list').append( items.join('') );
       }).fail(function(jqXHR, textStatus, errorThrown){
