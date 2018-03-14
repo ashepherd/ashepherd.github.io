@@ -19,11 +19,15 @@
   
   <style>
     body { margin:0; padding:0; }
-    #map { position: absolute; top:0; bottom:0; right:0; left:0; }
+    #map { position: absolute; top:0; bottom:0; right:0; left:200px; }
   </style>
 </head>
 <body>
-  <div id="features-list" style="inline-block; float:left"></div>
+  <div id="features-list-block" style="inline-block; float:left">
+    <h3>List of features</h3>
+    <ul id="features-list">
+    </ul>
+  </div>
   <div id="map" style="inline-blockl float: right"></div>
   <script id="geojson-data" src="/features-test.json" type="application/json"></script>
   <script>
@@ -39,9 +43,12 @@
           dataType: "text"
       }).done(function(data, textStatus, jqXHR){
         json=JSON.parse(data);
+        var items = [];
         $.each(json["features"], function( index, element ) {
-          console.log(element["properties"]["URL"]);                    
+          console.log(element["properties"]["URL"]);  
+          items.push('<li>' + element["properties"]["URL"] + '</li>');
         });
+        $('#features-list').append( items.join('') );
       }).fail(function(jqXHR, textStatus, errorThrown){
         alert("Could not load the GeoJSON: " + $("#geojson-data").attr('src'));
       });
