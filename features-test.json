@@ -13,6 +13,15 @@
       "properties": {
         "URL": "http:\/\/data.neotomadb.org\/datasets\/1\/"
       }
+    },
+    {
+       "type": "Feature",
+       "geometry": {
+        "type": "Polygon",
+       "coordinates": [[[179.9942,89.997],[-179.9998,89.997],[-179.9998,54.5025],[179.9942,54.5025],[179.9942,89.997]]]
+
+       },
+     "properties": {}
     }
   ]
 }
