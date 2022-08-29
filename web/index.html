@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <script src="https://unpkg.com/ag-grid-community/dist/ag-grid-community.min.noStyle.js"></script>
+    <link rel="stylesheet" href="https://unpkg.com/ag-grid-community/dist/styles/ag-grid.css">
+    <link rel="stylesheet" href="https://unpkg.com/ag-grid-community/dist/styles/ag-theme-balham.css">
+    <style>
+        img.thumbnail {
+            max-height: 80px;
+            width: auto;
+        }
+        div.ag-cell-value[col-id="title"] {
+            line-height: 15px;
+        }
+    </style>
+</head>
+<body>
+<h1>Plex</h1>
+<div id="myGrid" style="height: 800px; width:100%;" class="ag-theme-balham"></div>
+
+<script type="text/javascript" charset="utf-8">
+    function basicComparator(o1, o2) {
+        // Now that both parameters are Date objects, we can compare
+        if (o1 === null && o2 === null) {
+            return 0;
+        }
+        if (o1 === null) {
+            return -1;
+        }
+        if (o2 === null) {
+            return 1;
+        }
+ 
+        return o1 - o2;
+    }
+
+    function dateValue(datestr) {
+        if (datestr == undefined) {
+            return null;
+        }
+        const dateParts = datestr.split('/');
+        const month = Number(dateParts[0]);
+        const day = Number(dateParts[1]) - 1;
+        const year = Number(dateParts[2]);
+        return new Date(year, month, day);
+    }
+    function dateComparator(date1, date2, row1, row2) {
+        return basicComparator(dateValue(date1), dateValue(date2));
+    }
+    function yearComparator(y1, y2, row1, row2) {
+        if (null != row1.data.release_date && null != row2.data.release_date) {
+            return basicComparator(row1.data.release_date.ordinal, row2.data.release_date.ordinal);
+        } else {
+            return basicComparator(y1, y2);
+        }
+        return basicComparator(dateValue(row1.data.release_date.label), dateValue(row2.data.release_date.label));
+    }
+
+    var dateFilter = { 
+        browserDatePicker: true,
+        buttons: ['reset', 'apply'],
+        comparator: (filterDate, cellValue) => {
+            //console.log(filterDate, cellValue);
+            const cellDate = dateValue(cellValue);
+            // Now that both parameters are Date objects, we can compare
+            if (cellDate < filterDate) {
+                return -1;
+            } else if (cellDate > filterDate) {
+                return 1;
+            } else {
+                return 0;
+            }
+        }
+    }
+    function ratingValue(rating) {
+        if (rating == null) {
+            return 100;
+        }
+
+        if (rating.startsWith('TV-')) {
+            rating = rating.substring(3);
+        }
+        var value = 0;
+        switch(rating) {
+            case 'X':
+                value = 1;
+                break;
+            
+            case 'R':
+                value = 2;
+                break;
+            case '14':
+                value = 3;
+                break;
+            case 'PG-13':
+                value = 4;
+                break;
+            case 'PG': 
+                value = 5;
+                break;
+            case 'Passed': 
+                value = 6;
+                break;
+            case 'Approved': 
+                value = 7;
+                break;
+            case 'G': 
+                value = 8;
+                break;
+            case 'Not Rated':
+            default:
+                value = 9;
+                break;
+        }
+        return value;
+    }
+
+    function ratingComparator(val1, val2, row1, row2) {
+        var r1 = ratingValue(val1);
+        var r2 = ratingValue(val2);
+        return basicComparator(r1, r2);
+    }
+
+    function runtimeComparator(r1, r2, row1, row2) {
+        if (null != row1.data.runtime && null != row2.data.runtime) {
+            return basicComparator(row1.data.runtime.duration, row2.data.runtime.duration);
+        } else {
+            return basicComparator(r1, r2);
+        }
+    }
+
+    function headerHeightSetter() {
+        var padding = 20;
+        var height = headerHeightGetter() + padding;
+        gridOptions.api.setHeaderHeight(height);
+        gridOptions.api.resetRowHeights();
+    }
+
+    function headerHeightGetter() {
+        var columnHeaderTexts = [
+            ...document.querySelectorAll('.ag-header-cell-text'),
+        ];
+        var clientHeights = columnHeaderTexts.map(
+            headerText => headerText.clientHeight
+        );
+        var tallestHeaderTextHeight = Math.max(...clientHeights);
+
+        return tallestHeaderTextHeight;
+    }
+
+    function sizeToFit() {
+        gridOptions.api.resetRowHeights();
+        gridOptions.api.sizeColumnsToFit({
+            defaultMinWidth: 120,
+            columnLimits: [
+                { key: 'title', minWidth: 700 },
+                { key: 'genres', maxWidth: 300 },
+            ],
+        });
+    }
+
+    const columnDefs = [
+        {
+            headerName: 'Movies',
+            children:[
+                {
+                    headerName: 'Poster', 
+                    field: 'thumbnail', 
+                    type: 'rightAligned',
+                    width: 100,
+                    suppressSizeToFit: true,
+                    cellRenderer: params => {
+                        var url = './data/thumbnails/' + params.value;
+                        return '<a href="' + url + '" target="_blank"><img class="thumbnail" src="' + url + '"/></a>';
+                    }
+                },
+                {
+                    headerName: 'Title',
+                    field: 'title', 
+                    cellRenderer: params => {
+                        var value = '<strong>' + params.data.title + '</strong><br/>';
+                        if (null != params.data.tagline) {
+                            value += '<em>' + params.data.tagline + '</em><br/>';
+                        }
+                        if (null != params.data.summary) {
+                            value += '<span>' + params.data.summary + '</span></div>';
+                        }
+                        return value;
+                    }
+                },
+                {
+                    headerName: 'Rating',
+                    field: 'rating', 
+                    width: 100,
+                    suppressSizeToFit: true,
+                    comparator: ratingComparator,
+                    filterParams: {
+                        comparator: ratingComparator,
+                        buttons: ['reset', 'apply']
+                    }
+                },
+                {
+                    headerName: 'Runtime',
+                    field: 'runtime.label', 
+                    width: 150,
+                    suppressSizeToFit: true,
+                    comparator: runtimeComparator
+                },
+                {
+                    headerName: 'Genre',
+                    field: 'genres', 
+                    width: 200,
+                }
+            ]
+        },
+        {   
+            headerName: 'Release Date', 
+            marryChildren: true,
+            children:[
+                {
+                    headerName: 'Date',
+                    field: 'release_date.label', 
+                    comparator: dateComparator,
+                    filter: 'agDateColumnFilter', 
+                    filterParams: dateFilter, 
+                    width: 150,
+                    suppressSizeToFit: true,
+                    columnGroupShow: 'open'
+                },
+                {
+                    headerName: 'Year', 
+                    field: 'year', 
+                    filter: 'agNumberColumnFilter',
+                    width: 90,
+                    suppressSizeToFit: true,
+                    comparator: yearComparator
+                }
+            ]
+        }
+    ];
+
+    const gridOptions = {
+        defaultColDef: {
+            flex: 1,
+            filter: true,
+            filterParams: {
+                buttons: ['reset', 'apply']
+            },
+            resizable: true,
+            rowHeight: 100,
+            sortable: true
+        },
+        columnDefs: columnDefs,
+        getRowHeight: params => 100,
+        onFirstDataRendered: headerHeightSetter,
+        onColumnResized: headerHeightSetter,
+        pagination: false
+    };
+
+    const eGridDiv = document.querySelector('#myGrid');
+
+    new agGrid.Grid(eGridDiv, gridOptions);
+
+    fetch('./data/media.json').then(function (response) {
+        return response.json();
+    }).then(function (data) {
+        gridOptions.api.setRowData(data);
+        sizeToFit();
+
+        let i = 0;
+        genres = []
+        while (i < data.length) {
+            let j = 0;
+            while (j < data[i]['genres'].length) {
+                if (!genres.includes(data[i]['genres'][j])) {
+                    genres.push(data[i]['genres'][j]);
+                }
+                j++;
+            }
+            i++;
+        }
+        console.log(genres);
+    })
+</script>
+</body>
+</html>
