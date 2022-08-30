@@ -12,158 +12,33 @@
         div.ag-cell-value[col-id="title"] {
             line-height: 15px;
         }
+        span.ag-cell-value {
+            padding: 10px;
+        }
+        .ag-theme-balham .ag-cell, .ag-theme-balham .ag-full-width-row .ag-cell-wrapper.ag-row-group {
+            line-height: unset;
+        }
+        .more-details-link {
+            display: inline;
+        }
+        .more-details {
+            display: none;
+        }
     </style>
 </head>
 <body>
 <h1>Plex</h1>
 <div id="myGrid" style="height: 800px; width:100%;" class="ag-theme-balham"></div>
-
+<script src="utils.js"></script>
 <script type="text/javascript" charset="utf-8">
-    function basicComparator(o1, o2) {
-        // Now that both parameters are Date objects, we can compare
-        if (o1 === null && o2 === null) {
-            return 0;
-        }
-        if (o1 === null) {
-            return -1;
-        }
-        if (o2 === null) {
-            return 1;
-        }
- 
-        return o1 - o2;
-    }
-
-    function dateValue(datestr) {
-        if (datestr == undefined) {
-            return null;
-        }
-        const dateParts = datestr.split('/');
-        const month = Number(dateParts[0]);
-        const day = Number(dateParts[1]) - 1;
-        const year = Number(dateParts[2]);
-        return new Date(year, month, day);
-    }
-    function dateComparator(date1, date2, row1, row2) {
-        return basicComparator(dateValue(date1), dateValue(date2));
-    }
-    function yearComparator(y1, y2, row1, row2) {
-        if (null != row1.data.release_date && null != row2.data.release_date) {
-            return basicComparator(row1.data.release_date.ordinal, row2.data.release_date.ordinal);
-        } else {
-            return basicComparator(y1, y2);
-        }
-        return basicComparator(dateValue(row1.data.release_date.label), dateValue(row2.data.release_date.label));
-    }
-
-    var dateFilter = { 
-        browserDatePicker: true,
-        buttons: ['reset', 'apply'],
-        comparator: (filterDate, cellValue) => {
-            //console.log(filterDate, cellValue);
-            const cellDate = dateValue(cellValue);
-            // Now that both parameters are Date objects, we can compare
-            if (cellDate < filterDate) {
-                return -1;
-            } else if (cellDate > filterDate) {
-                return 1;
-            } else {
-                return 0;
-            }
-        }
-    }
-    function ratingValue(rating) {
-        if (rating == null) {
-            return 100;
-        }
-
-        if (rating.startsWith('TV-')) {
-            rating = rating.substring(3);
-        }
-        var value = 0;
-        switch(rating) {
-            case 'X':
-                value = 1;
-                break;
-            
-            case 'R':
-                value = 2;
-                break;
-            case '14':
-                value = 3;
-                break;
-            case 'PG-13':
-                value = 4;
-                break;
-            case 'PG': 
-                value = 5;
-                break;
-            case 'Passed': 
-                value = 6;
-                break;
-            case 'Approved': 
-                value = 7;
-                break;
-            case 'G': 
-                value = 8;
-                break;
-            case 'Not Rated':
-            default:
-                value = 9;
-                break;
-        }
-        return value;
-    }
-
-    function ratingComparator(val1, val2, row1, row2) {
-        var r1 = ratingValue(val1);
-        var r2 = ratingValue(val2);
-        return basicComparator(r1, r2);
-    }
-
-    function runtimeComparator(r1, r2, row1, row2) {
-        if (null != row1.data.runtime && null != row2.data.runtime) {
-            return basicComparator(row1.data.runtime.duration, row2.data.runtime.duration);
-        } else {
-            return basicComparator(r1, r2);
-        }
-    }
-
-    function headerHeightSetter() {
-        var padding = 20;
-        var height = headerHeightGetter() + padding;
-        gridOptions.api.setHeaderHeight(height);
-        gridOptions.api.resetRowHeights();
-    }
-
-    function headerHeightGetter() {
-        var columnHeaderTexts = [
-            ...document.querySelectorAll('.ag-header-cell-text'),
-        ];
-        var clientHeights = columnHeaderTexts.map(
-            headerText => headerText.clientHeight
-        );
-        var tallestHeaderTextHeight = Math.max(...clientHeights);
-
-        return tallestHeaderTextHeight;
-    }
-
-    function sizeToFit() {
-        gridOptions.api.resetRowHeights();
-        gridOptions.api.sizeColumnsToFit({
-            defaultMinWidth: 120,
-            columnLimits: [
-                { key: 'title', minWidth: 700 },
-                { key: 'genres', maxWidth: 300 },
-            ],
-        });
-    }
 
     const columnDefs = [
         {
+            colId: 'movie',
             headerName: 'Movies',
             children:[
                 {
+                    colId: 'poster',
                     headerName: 'Poster', 
                     field: 'thumbnail', 
                     type: 'rightAligned',
@@ -171,24 +46,53 @@
                     suppressSizeToFit: true,
                     cellRenderer: params => {
                         var url = './data/thumbnails/' + params.value;
-                        return '<a href="' + url + '" target="_blank"><img class="thumbnail" src="' + url + '"/></a>';
+                        var summary = "";
+                        if (null != params.data.summary) {
+                            summary = params.data.summary;
+                        }
+                        return '<a href="' + url + '" target="_blank"><img class="thumbnail" src="' + url + '" title="' + summary + '"/></a>';
                     }
                 },
                 {
+                    colId: 'title',
                     headerName: 'Title',
                     field: 'title', 
+                    comparator: titleComparator,
                     cellRenderer: params => {
-                        var value = '<strong>' + params.data.title + '</strong><br/>';
+                        var value = '<strong>' + params.data.title + '</strong>';
                         if (null != params.data.tagline) {
-                            value += '<em>' + params.data.tagline + '</em><br/>';
+                            value += '<br/><em>' + params.data.tagline + '</em>';
                         }
                         if (null != params.data.summary) {
-                            value += '<span>' + params.data.summary + '</span></div>';
+                            value += '</br><span>' + params.data.summary + '</span></br>';
                         }
+                        var item_key = params.data.key.replace(/^[^a-z]+|[^\w:.-]+/gi, "-");
+                        value += '<div class="more-details-link" id="' + item_key + '-more"> ' + 
+                            '<a href="#" class="more-link" onclick="itemDetails(\'' + item_key  +'\');">[<span>more</span>]</a></div>' + 
+                        '<div class="more-details" id="' + item_key+ '-details">';
+                        if (null != params.data.directors && params.data.directors.length > 0) {
+                            value += '</br><strong>Director:</strong> ' + params.data.directors.map(
+                                function(elem){ return elem.name; }).join(",") + '</br>';
+                        }
+                        if (null != params.data.roles && params.data.roles.length > 0) {
+                            const actors = params.data.roles.slice(0, 10);
+                            value += '</br><strong>Actors:</strong> ' + actors.map(
+                                function(elem){ var str = elem.name; if (null != elem.role) { str += ' (' + elem.role + ')'; } return str; }).join(",");
+                        }
+                        if (null != params.data.writers && params.data.writers.length > 0) {
+                            value += '</br><strong>Writers:</strong> ' + params.data.writers.map(
+                                function(elem){ return elem.name; }).join(",");
+                        }
+                        if (null != params.data.producers && params.data.producers.length > 0) {
+                            value += '</br><strong>Producers:</strong> ' + params.data.producers.map(
+                                function(elem){ return elem.name; }).join(",");
+                        }
+                        value += '</div>';
                         return value;
                     }
                 },
                 {
+                    colId: 'rating',
                     headerName: 'Rating',
                     field: 'rating', 
                     width: 100,
@@ -200,6 +104,7 @@
                     }
                 },
                 {
+                    colId: 'runtime',
                     headerName: 'Runtime',
                     field: 'runtime.label', 
                     width: 150,
@@ -207,6 +112,7 @@
                     comparator: runtimeComparator
                 },
                 {
+                    colId: 'genre',
                     headerName: 'Genre',
                     field: 'genres', 
                     width: 200,
@@ -214,11 +120,13 @@
             ]
         },
         {   
-            headerName: 'Release Date', 
+            colId: 'date',
+            headerName: 'Date', 
             marryChildren: true,
             children:[
                 {
-                    headerName: 'Date',
+                    colId: 'release_date',
+                    headerName: 'Release Date',
                     field: 'release_date.label', 
                     comparator: dateComparator,
                     filter: 'agDateColumnFilter', 
@@ -228,6 +136,7 @@
                     columnGroupShow: 'open'
                 },
                 {
+                    colId: 'year',
                     headerName: 'Year', 
                     field: 'year', 
                     filter: 'agNumberColumnFilter',
@@ -236,6 +145,20 @@
                     comparator: yearComparator
                 }
             ]
+        },
+        {
+            colId: 'date_added',
+            headerName: 'Date Added',
+            field: 'dateAdded.label', 
+            comparator: dateComparator,
+            filter: 'agDateColumnFilter', 
+            filterParams: dateFilter, 
+            width: 150,
+            cellRenderer: params => {
+                var date = new Date(params.data.dateAdded.label);
+                return date.toDateString();
+            }
+            
         }
     ];
 
@@ -248,12 +171,15 @@
             },
             resizable: true,
             rowHeight: 100,
-            sortable: true
+            sortable: true,
+            wrapText: true, 
+            autoHeight: true, 
         },
         columnDefs: columnDefs,
         getRowHeight: params => 100,
         onFirstDataRendered: headerHeightSetter,
         onColumnResized: headerHeightSetter,
+        onGridReady: onGridReady,
         pagination: false
     };
 
@@ -261,12 +187,13 @@
 
     new agGrid.Grid(eGridDiv, gridOptions);
 
-    fetch('./data/media.json').then(function (response) {
+    fetch('./data/library.json').then(function (response) {
         return response.json();
     }).then(function (data) {
         gridOptions.api.setRowData(data);
-        sizeToFit();
+        
 
+        /* GENRES */
         let i = 0;
         genres = []
         while (i < data.length) {
@@ -281,6 +208,7 @@
         }
         console.log(genres);
     })
+
 </script>
 </body>
 </html>
