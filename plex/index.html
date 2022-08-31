@@ -1,214 +1,24 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <script src="https://unpkg.com/ag-grid-community/dist/ag-grid-community.min.noStyle.js"></script>
     <link rel="stylesheet" href="https://unpkg.com/ag-grid-community/dist/styles/ag-grid.css">
     <link rel="stylesheet" href="https://unpkg.com/ag-grid-community/dist/styles/ag-theme-balham.css">
-    <style>
-        img.thumbnail {
-            max-height: 80px;
-            width: auto;
-        }
-        div.ag-cell-value[col-id="title"] {
-            line-height: 15px;
-        }
-        span.ag-cell-value {
-            padding: 10px;
-        }
-        .ag-theme-balham .ag-cell, .ag-theme-balham .ag-full-width-row .ag-cell-wrapper.ag-row-group {
-            line-height: unset;
-        }
-        .more-details-link {
-            display: inline;
-        }
-        .more-details {
-            display: none;
-        }
-    </style>
+    <link rel="stylesheet" href="styles.css">
+    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+    <script src="https://www.unpkg.com/jquery@1.12.4/dist/jquery.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
 </head>
 <body>
-<h1>Plex</h1>
-<div id="myGrid" style="height: 800px; width:100%;" class="ag-theme-balham"></div>
-<script src="utils.js"></script>
-<script type="text/javascript" charset="utf-8">
-
-    const columnDefs = [
-        {
-            colId: 'movie',
-            headerName: 'Movies',
-            children:[
-                {
-                    colId: 'poster',
-                    headerName: 'Poster', 
-                    field: 'thumbnail', 
-                    type: 'rightAligned',
-                    width: 100,
-                    suppressSizeToFit: true,
-                    cellRenderer: params => {
-                        var url = './data/thumbnails/' + params.value;
-                        var summary = "";
-                        if (null != params.data.summary) {
-                            summary = params.data.summary;
-                        }
-                        return '<a href="' + url + '" target="_blank"><img class="thumbnail" src="' + url + '" title="' + summary + '"/></a>';
-                    }
-                },
-                {
-                    colId: 'title',
-                    headerName: 'Title',
-                    field: 'title', 
-                    comparator: titleComparator,
-                    cellRenderer: params => {
-                        var value = '<strong>' + params.data.title + '</strong>';
-                        if (null != params.data.tagline) {
-                            value += '<br/><em>' + params.data.tagline + '</em>';
-                        }
-                        if (null != params.data.summary) {
-                            value += '</br><span>' + params.data.summary + '</span></br>';
-                        }
-                        var item_key = params.data.key.replace(/^[^a-z]+|[^\w:.-]+/gi, "-");
-                        value += '<div class="more-details-link" id="' + item_key + '-more"> ' + 
-                            '<a href="#" class="more-link" onclick="itemDetails(\'' + item_key  +'\');">[<span>more</span>]</a></div>' + 
-                        '<div class="more-details" id="' + item_key+ '-details">';
-                        if (null != params.data.directors && params.data.directors.length > 0) {
-                            value += '</br><strong>Director:</strong> ' + params.data.directors.map(
-                                function(elem){ return elem.name; }).join(",") + '</br>';
-                        }
-                        if (null != params.data.roles && params.data.roles.length > 0) {
-                            const actors = params.data.roles.slice(0, 10);
-                            value += '</br><strong>Actors:</strong> ' + actors.map(
-                                function(elem){ var str = elem.name; if (null != elem.role) { str += ' (' + elem.role + ')'; } return str; }).join(",");
-                        }
-                        if (null != params.data.writers && params.data.writers.length > 0) {
-                            value += '</br><strong>Writers:</strong> ' + params.data.writers.map(
-                                function(elem){ return elem.name; }).join(",");
-                        }
-                        if (null != params.data.producers && params.data.producers.length > 0) {
-                            value += '</br><strong>Producers:</strong> ' + params.data.producers.map(
-                                function(elem){ return elem.name; }).join(",");
-                        }
-                        value += '</div>';
-                        return value;
-                    }
-                },
-                {
-                    colId: 'rating',
-                    headerName: 'Rating',
-                    field: 'rating', 
-                    width: 100,
-                    suppressSizeToFit: true,
-                    comparator: ratingComparator,
-                    filterParams: {
-                        comparator: ratingComparator,
-                        buttons: ['reset', 'apply']
-                    }
-                },
-                {
-                    colId: 'runtime',
-                    headerName: 'Runtime',
-                    field: 'runtime.label', 
-                    width: 150,
-                    suppressSizeToFit: true,
-                    comparator: runtimeComparator
-                },
-                {
-                    colId: 'genre',
-                    headerName: 'Genre',
-                    field: 'genres', 
-                    width: 200,
-                }
-            ]
-        },
-        {   
-            colId: 'date',
-            headerName: 'Date', 
-            marryChildren: true,
-            children:[
-                {
-                    colId: 'release_date',
-                    headerName: 'Release Date',
-                    field: 'release_date.label', 
-                    comparator: dateComparator,
-                    filter: 'agDateColumnFilter', 
-                    filterParams: dateFilter, 
-                    width: 150,
-                    suppressSizeToFit: true,
-                    columnGroupShow: 'open'
-                },
-                {
-                    colId: 'year',
-                    headerName: 'Year', 
-                    field: 'year', 
-                    filter: 'agNumberColumnFilter',
-                    width: 90,
-                    suppressSizeToFit: true,
-                    comparator: yearComparator
-                }
-            ]
-        },
-        {
-            colId: 'date_added',
-            headerName: 'Date Added',
-            field: 'dateAdded.label', 
-            comparator: dateComparator,
-            filter: 'agDateColumnFilter', 
-            filterParams: dateFilter, 
-            width: 150,
-            cellRenderer: params => {
-                var date = new Date(params.data.dateAdded.label);
-                return date.toDateString();
-            }
-            
-        }
-    ];
-
-    const gridOptions = {
-        defaultColDef: {
-            flex: 1,
-            filter: true,
-            filterParams: {
-                buttons: ['reset', 'apply']
-            },
-            resizable: true,
-            rowHeight: 100,
-            sortable: true,
-            wrapText: true, 
-            autoHeight: true, 
-        },
-        columnDefs: columnDefs,
-        getRowHeight: params => 100,
-        onFirstDataRendered: headerHeightSetter,
-        onColumnResized: headerHeightSetter,
-        onGridReady: onGridReady,
-        pagination: false
-    };
-
-    const eGridDiv = document.querySelector('#myGrid');
-
-    new agGrid.Grid(eGridDiv, gridOptions);
-
-    fetch('./data/library.json').then(function (response) {
-        return response.json();
-    }).then(function (data) {
-        gridOptions.api.setRowData(data);
-        
-
-        /* GENRES */
-        let i = 0;
-        genres = []
-        while (i < data.length) {
-            let j = 0;
-            while (j < data[i]['genres'].length) {
-                if (!genres.includes(data[i]['genres'][j])) {
-                    genres.push(data[i]['genres'][j]);
-                }
-                j++;
-            }
-            i++;
-        }
-        console.log(genres);
-    })
-
-</script>
+    <h1>Plex</h1>
+    <input type="text" id="search-input" name="q" size="100" placeholder="Search by movie title, genre, actor, director, etc.">
+    Genres: <select name="genre" id="genre-select" multiple> </select>
+    <br/>
+    <button type="button" id="search-button">Search</button>
+    <button type="button" id="reset-button">Reset</button>
+    <div style="float: right"><strong>Total:</strong> <div id="item-count">---</div></div>
+    <div id="myGrid" style="height: 1300px; width:100%;" class="ag-theme-balham"></div>
+    <script src="https://unpkg.com/ag-grid-community/dist/ag-grid-community.min.noStyle.js"></script>
+    <script src="utils.js"></script>
+    <script src="data.js"></script>
 </body>
 </html>
