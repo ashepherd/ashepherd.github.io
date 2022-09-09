@@ -15,13 +15,14 @@ const columnDefs = [
                     if (null != params.data.summary) {
                         summary = params.data.summary;
                     }
-                    return '<a href="' + url + '" target="_blank"><img class="thumbnail" src="' + url + '" title="' + summary + '"/></a>';
+                    return '<div align="center"><a href="' + url + '" target="_blank"><img class="thumbnail" src="' + url + '" title="' + summary + '"/></a><br/><span>' + params.data.year + '</span></div>';
                 }
             },
             {
                 colId: 'title',
                 headerName: 'Title',
                 field: 'title', 
+                width: 500,
                 comparator: titleComparator,
                 getQuickFilterText: params => {
                     var value = params.value.name + ' ' + params.data.tagline;
@@ -76,6 +77,20 @@ const columnDefs = [
                 }
             },
             {
+                colId: 'date_added',
+                headerName: 'Date Added',
+                field: 'dateAdded.label', 
+                comparator: dateComparator,
+                filter: 'agDateColumnFilter', 
+                filterParams: dateFilter, 
+                width: 150,
+                columnGroupShow: 'open',
+                cellRenderer: params => {
+                    var date = new Date(params.data.dateAdded.label);
+                    return date.toLocaleDateString();
+                }
+            },
+            {
                 colId: 'rating',
                 headerName: 'Rating',
                 field: 'rating', 
@@ -106,7 +121,8 @@ const columnDefs = [
                 width: 200,
             }
         ]
-    },
+    }
+    /*,
     {   
         colId: 'date',
         headerName: 'Date', 
@@ -130,10 +146,8 @@ const columnDefs = [
                 filter: 'agDateColumnFilter', 
                 filterParams: dateFilter, 
                 width: 150,
-                suppressSizeToFit: true,
-                columnGroupShow: 'open'
+                suppressSizeToFit: true
             },
-            
             {
                 colId: 'date_added',
                 headerName: 'Date Added',
@@ -150,6 +164,7 @@ const columnDefs = [
             }
         ]
     }
+    */
 ];
 
 const gridOptions = {

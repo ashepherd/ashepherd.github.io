@@ -18,17 +18,19 @@
     <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
 </head>
 <body>
-    <section class="section bg-img">
-        <div class="container">
-            <h1>Plex</h1>
-            <input type="text" id="search-input" name="q" size="100" placeholder="Search by movie title, genre, actor, director, etc.">
-            Genres: <select name="genre" id="genre-select" multiple> </select>
-            <br/>
-            <button type="button" id="search-button">Search</button>
-            <button type="button" id="reset-button">Reset</button>
-            <div style="float: right"><strong>Total:</strong> <div id="item-count">---</div></div>
-            <div id="myGrid" style="height: 1300px; width:100%;" class="ag-theme-balham"></div>
+    <section class="section p-2">
+        <div class="container m-">
+            <table class="table">
+                <tr><td>Search:</td><td><input class="input" type="text" id="search-input" name="q" size="100" placeholder="Search by movie title, genre, actor, director, etc."></td></tr>
+                <tr><td>Genres:</td><td><select class="select" name="genre" id="genre-select" multiple></select>
+                    <button class="button is-success ml-6" type="button" id="search-button">Search</button>
+                    <button class="button is-danger" type="button" id="reset-button">Reset</button></td></tr>
+            </table>
         </div>
+    </section>
+    <section class="section p-1">
+        <div style="float: right"><strong>Total:</strong> <div id="item-count">---</div></div>
+        <div id="myGrid" style="height: 1300px; width:100%; clear: both;" class="ag-theme-balham"></div>
     </section>
     
     <script src="https://unpkg.com/ag-grid-community/dist/ag-grid-community.min.noStyle.js"></script>
