@@ -140,13 +140,16 @@ function onGridReady(params) {
 }
 
 function sizeToFit() {
+    /*
     gridOptions.api.sizeColumnsToFit({
         defaultMinWidth: 120,
         columnLimits: [
+            { key: 'poster', minWidth: 150 },
             { key: 'title', minWidth: 700 },
-            { key: 'date_added', minWidth: 150 },
+            { key: 'year', minWidth: 150 },
         ],
     });
+    */
 }
 
 function itemDetails(item) {

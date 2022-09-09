@@ -8,7 +8,6 @@ const columnDefs = [
                 headerName: 'Poster', 
                 field: 'thumbnail', 
                 type: 'rightAligned',
-                width: 100,
                 suppressSizeToFit: true,
                 cellRenderer: params => {
                     var url = './data/thumbnails/' + params.value;
@@ -82,6 +81,7 @@ const columnDefs = [
                 field: 'rating', 
                 width: 100,
                 suppressSizeToFit: true,
+                columnGroupShow: 'open',
                 comparator: ratingComparator,
                 filterParams: {
                     comparator: ratingComparator,
@@ -94,12 +94,15 @@ const columnDefs = [
                 field: 'runtime.label', 
                 width: 150,
                 suppressSizeToFit: true,
+                columnGroupShow: 'open',
                 comparator: runtimeComparator
             },
             {
                 colId: 'genre',
                 headerName: 'Genre',
                 field: 'genres', 
+                columnGroupShow: 'open',
+                suppressSizeToFit: true,
                 width: 200,
             }
         ]
@@ -109,6 +112,16 @@ const columnDefs = [
         headerName: 'Date', 
         marryChildren: true,
         children:[
+            {
+                colId: 'year',
+                headerName: 'Year', 
+                field: 'year', 
+                filter: 'agNumberColumnFilter',
+                width: 120,
+                suppressSizeToFit: true,
+                comparator: yearComparator,
+                
+            },
             {
                 colId: 'release_date',
                 headerName: 'Release Date',
@@ -120,30 +133,22 @@ const columnDefs = [
                 suppressSizeToFit: true,
                 columnGroupShow: 'open'
             },
+            
             {
-                colId: 'year',
-                headerName: 'Year', 
-                field: 'year', 
-                filter: 'agNumberColumnFilter',
-                width: 90,
-                suppressSizeToFit: true,
-                comparator: yearComparator
+                colId: 'date_added',
+                headerName: 'Date Added',
+                field: 'dateAdded.label', 
+                comparator: dateComparator,
+                filter: 'agDateColumnFilter', 
+                filterParams: dateFilter, 
+                width: 150,
+                columnGroupShow: 'open',
+                cellRenderer: params => {
+                    var date = new Date(params.data.dateAdded.label);
+                    return date.toLocaleDateString();
+                }
             }
         ]
-    },
-    {
-        colId: 'date_added',
-        headerName: 'Date Added',
-        field: 'dateAdded.label', 
-        comparator: dateComparator,
-        filter: 'agDateColumnFilter', 
-        filterParams: dateFilter, 
-        width: 150,
-        cellRenderer: params => {
-            var date = new Date(params.data.dateAdded.label);
-            return date.toDateString();
-        }
-        
     }
 ];
 
