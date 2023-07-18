@@ -1,6 +1,18 @@
 <html>
-  <head></head>
+  <head>
+    <style>
+      .iframe-maps iframe {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100% !important;
+        height: 100% !important;
+    }
+    </style>
+  </head>
   <body>
-    <iframe src="https://www.google.com/maps/d/embed?mid=1Nr-I8S3-h5gg3MrEbtxN5vJGc40&ehbc=2E312F" width="640" height="480"></iframe>
+    <div class="iframe-maps">
+    <iframe src="https://www.google.com/maps/d/embed?mid=1Nr-I8S3-h5gg3MrEbtxN5vJGc40&ehbc=2E312F" width="640" height="480" allowfullscreen></iframe>
+    </div>
   </body>
 </html>
